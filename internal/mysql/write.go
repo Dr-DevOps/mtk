@@ -59,17 +59,17 @@ func (d *Client) WriteCommit(w io.Writer) {
 
 // WriteTableLockWrite to be used for a dump script.
 func (d *Client) WriteTableLockWrite(w io.Writer, table string) {
-	fmt.Fprintf(w, "LOCK TABLES `%s` WRITE;\n", table)
+	fmt.Fprintf(w, "LOCK TABLES `%s` WRITE;\n", escapeIdentifier(table))
 }
 
 // WriteTableDisableKeys to be used for a dump script.
 func (d *Client) WriteTableDisableKeys(w io.Writer, table string) {
-	fmt.Fprintf(w, "/*!40000 ALTER TABLE `%s` DISABLE KEYS */;\n", table)
+	fmt.Fprintf(w, "/*!40000 ALTER TABLE `%s` DISABLE KEYS */;\n", escapeIdentifier(table))
 }
 
 // WriteTableEnableKeys to be used for a dump script.
 func (d *Client) WriteTableEnableKeys(w io.Writer, table string) {
-	fmt.Fprintf(w, "/*!40000 ALTER TABLE `%s` ENABLE KEYS */;\n", table)
+	fmt.Fprintf(w, "/*!40000 ALTER TABLE `%s` ENABLE KEYS */;\n", escapeIdentifier(table))
 }
 
 // WriteUnlockTables to be used for a dump script.
@@ -81,13 +81,13 @@ func (d *Client) WriteUnlockTables(w io.Writer) {
 func (d *Client) WriteCreateTable(w io.Writer, table string) error {
 	d.Logger.Println("Dumping structure for table:", table)
 
-	fmt.Fprintf(w, "\n--\n-- Structure for table `%s`\n--\n\n", table)
-	fmt.Fprintf(w, "DROP TABLE IF EXISTS `%s`;\n", table)
+	fmt.Fprintf(w, "\n--\n-- Structure for table `%s`\n--\n\n", escapeIdentifier(table))
+	fmt.Fprintf(w, "DROP TABLE IF EXISTS `%s`;\n", escapeIdentifier(table))
 
 	fmt.Fprintln(w, "/*!40101 SET @saved_cs_client     = @@character_set_client */;")
 	fmt.Fprintln(w, "/*!40101 SET character_set_client = utf8 */;")
 
-	row := d.DB.QueryRow(fmt.Sprintf("SHOW CREATE TABLE `%s`", table))
+	row := d.DB.QueryRow(fmt.Sprintf("SHOW CREATE TABLE `%s`", escapeIdentifier(table)))
 
 	var name, ddl string
 
@@ -104,7 +104,7 @@ func (d *Client) WriteCreateTable(w io.Writer, table string) error {
 
 // WriteTableHeader which contains debug information.
 func (d *Client) WriteTableHeader(w io.Writer, table string, params provider.DumpParams) (uint64, error) {
-	fmt.Fprintf(w, "\n--\n-- Data for table `%s`", table)
+	fmt.Fprintf(w, "\n--\n-- Data for table `%s`", escapeIdentifier(table))
 
 	count, err := d.GetRowCountForTable(table, params)
 	if err != nil {
@@ -151,7 +151,7 @@ func (d *Client) WriteTableData(w io.Writer, table string, params provider.DumpP
 		}
 
 		if counter == 0 {
-			fmt.Fprintf(w, "INSERT INTO `%s` VALUES ", table)
+			fmt.Fprintf(w, "INSERT INTO `%s` VALUES ", escapeIdentifier(table))
 		}
 
 		counter++

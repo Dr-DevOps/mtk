@@ -6,6 +6,24 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestEscapeIdentifier(t *testing.T) {
+	// Test normal identifier
+	result := escapeIdentifier("users")
+	assert.Equal(t, "users", result)
+
+	// Test identifier with backtick
+	result = escapeIdentifier("orders`; DROP TABLE IF EXISTS `sensitive`; --")
+	assert.Equal(t, "orders``; DROP TABLE IF EXISTS ``sensitive``; --", result)
+
+	// Test identifier with multiple backticks
+	result = escapeIdentifier("table`with`multiple`backticks")
+	assert.Equal(t, "table``with``multiple``backticks", result)
+
+	// Test empty identifier
+	result = escapeIdentifier("")
+	assert.Equal(t, "", result)
+}
+
 func TestGetValue(t *testing.T) {
 	val, err := getValue("")
 	assert.NoError(t, err)

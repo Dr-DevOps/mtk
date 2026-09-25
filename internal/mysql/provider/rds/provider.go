@@ -10,6 +10,12 @@ import (
 	providerutils "github.com/skpr/mtk/internal/mysql/provider/utils"
 )
 
+// escapeIdentifier escapes MySQL identifiers (table names, column names) by doubling backticks.
+// This prevents SQL injection when identifiers are used within backtick-delimited contexts.
+func escapeIdentifier(identifier string) string {
+	return strings.ReplaceAll(identifier, "`", "``")
+}
+
 // Client used for dumping a database and/or table.
 type Client struct {
 	provider.Interface
@@ -38,7 +44,7 @@ func (d *Client) GetSelectQueryForTable(table string, params provider.DumpParams
 	}
 
 	query := fmt.Sprintf("SELECT %s", strings.Join(cols, ", "))
-	query = fmt.Sprintf("%s FROM `%s`", query, table)
+	query = fmt.Sprintf("%s FROM `%s`", query, escapeIdentifier(table))
 
 	if where, ok := params.WhereMap[strings.ToLower(table)]; ok {
 		query = fmt.Sprintf("%s WHERE %s", query, where)
@@ -67,7 +73,7 @@ func (d *Client) GetLoadQueryForTable(table string) (string, error) {
 		return "", fmt.Errorf("error: region is not configured correctly")
 	}
 	path := strings.TrimPrefix(d.URI, "s3://")
-	query := fmt.Sprintf("LOAD DATA FROM S3 MANIFEST 'S3-%s://%s/%s.csv.manifest' INTO TABLE `%s`", d.Region, path, table, table)
+	query := fmt.Sprintf("LOAD DATA FROM S3 MANIFEST 'S3-%s://%s/%s.csv.manifest' INTO TABLE `%s`", d.Region, path, table, escapeIdentifier(table))
 	query = fmt.Sprintf("%s FIELDS TERMINATED BY ',' ENCLOSED BY '\"' LINES TERMINATED BY '\\n'", query)
 
 	return query, nil
