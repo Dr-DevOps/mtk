@@ -111,7 +111,7 @@ func (d *Client) selectAllDataForTable(table string, params provider.DumpParams)
 
 // GetRowCountForTable will return the number of rows using a SELECT statement.
 func (d *Client) GetRowCountForTable(table string, params provider.DumpParams) (uint64, error) {
-	query := fmt.Sprintf("SELECT COUNT(*) FROM `%s`", table)
+	query := fmt.Sprintf("SELECT COUNT(*) FROM `%s`", escapeIdentifier(table))
 
 	if where, ok := params.WhereMap[strings.ToLower(table)]; ok {
 		query = fmt.Sprintf("%s WHERE %s", query, where)
@@ -130,7 +130,7 @@ func (d *Client) GetRowCountForTable(table string, params provider.DumpParams) (
 
 // LockTableReading explicitly acquires table locks for the current client session.
 func (d *Client) LockTableReading(table string) (sql.Result, error) {
-	return d.DB.Exec(fmt.Sprintf("LOCK TABLES `%s` READ", table))
+	return d.DB.Exec(fmt.Sprintf("LOCK TABLES `%s` READ", escapeIdentifier(table)))
 }
 
 // UnlockTables explicitly releases any table locks held by the current session.
@@ -140,5 +140,5 @@ func (d *Client) UnlockTables() (sql.Result, error) {
 
 // FlushTable will force a tables to be closed.
 func (d *Client) FlushTable(table string) (sql.Result, error) {
-	return d.DB.Exec(fmt.Sprintf("FLUSH TABLES `%s`", table))
+	return d.DB.Exec(fmt.Sprintf("FLUSH TABLES `%s`", escapeIdentifier(table)))
 }

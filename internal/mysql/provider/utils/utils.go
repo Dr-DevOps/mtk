@@ -8,11 +8,17 @@ import (
 	"github.com/skpr/mtk/internal/mysql/provider"
 )
 
+// escapeIdentifier escapes MySQL identifiers (table names, column names) by doubling backticks.
+// This prevents SQL injection when identifiers are used within backtick-delimited contexts.
+func escapeIdentifier(identifier string) string {
+	return strings.ReplaceAll(identifier, "`", "``")
+}
+
 // QueryColumnsForTable for a given table.
 func QueryColumnsForTable(database *sql.DB, table string, params provider.DumpParams) ([]string, error) {
 	var rows *sql.Rows
 
-	rows, err := database.Query(fmt.Sprintf("SELECT * FROM `%s` LIMIT 1", table))
+	rows, err := database.Query(fmt.Sprintf("SELECT * FROM `%s` LIMIT 1", escapeIdentifier(table)))
 	if err != nil {
 		return nil, err
 	}
@@ -27,9 +33,9 @@ func QueryColumnsForTable(database *sql.DB, table string, params provider.DumpPa
 	for k, column := range columns {
 		replacement, ok := params.SelectMap[strings.ToLower(table)][strings.ToLower(column)]
 		if ok {
-			columns[k] = fmt.Sprintf("%s AS `%s`", replacement, column)
+			columns[k] = fmt.Sprintf("%s AS `%s`", replacement, escapeIdentifier(column))
 		} else {
-			columns[k] = fmt.Sprintf("`%s`", column)
+			columns[k] = fmt.Sprintf("`%s`", escapeIdentifier(column))
 		}
 	}
 

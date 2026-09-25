@@ -4,9 +4,16 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/asaskevich/govalidator"
 )
+
+// escapeIdentifier escapes MySQL identifiers (table names, column names) by doubling backticks.
+// This prevents SQL injection when identifiers are used within backtick-delimited contexts.
+func escapeIdentifier(identifier string) string {
+	return strings.ReplaceAll(identifier, "`", "``")
+}
 
 func getValue(raw string) (string, error) {
 	if raw == "" {
