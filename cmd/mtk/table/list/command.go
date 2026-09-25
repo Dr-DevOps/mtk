@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"slices"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -75,6 +76,14 @@ func NewCommand(conn *mysql.Connection) *cobra.Command {
 	return cmd
 }
 
+// shellEscape escapes a string for safe use in POSIX shell single-quoted context.
+// It replaces single quotes with the sequence '\'' which ends the current single-quoted
+// string, adds an escaped single quote, and starts a new single-quoted string.
+func shellEscape(s string) string {
+	// Replace each single quote with '\'' to safely escape it in a single-quoted shell string
+	return strings.ReplaceAll(s, "'", "'\\''")
+}
+
 // Run the command which will list all tables.
 func (o *Options) Run(logger *log.Logger, conn *mysql.Connection, database string, exclude []string) error {
 	db, err := conn.Open(database)
@@ -101,7 +110,8 @@ func (o *Options) Run(logger *log.Logger, conn *mysql.Connection, database strin
 			continue
 		}
 
-		fmt.Println(table)
+		// Escape table names to prevent shell injection when used in pipelines
+		fmt.Println(shellEscape(table))
 	}
 
 	return nil
